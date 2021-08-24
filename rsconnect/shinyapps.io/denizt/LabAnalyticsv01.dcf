@@ -1,0 +1,13 @@
+name: LabAnalyticsv01
+title: LabAnalyticsv01
+username:
+account: denizt
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4501813
+bundleId: 4955039
+url: https://denizt.shinyapps.io/LabAnalyticsv01/
+when: 1629747229.48591
+lastSyncTime: 1629747229.48591
+asMultiple: FALSE
+asStatic: FALSE
