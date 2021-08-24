@@ -8,3 +8,8 @@ Introduction & Instructions
 o	First file is for laboratories definitions.
 o	Second file is for laboratory data.
 •	Options fields can be empty but column names still must be supplied. 
+
+
+Please read
+Introduction Instructions.pdf
+for detailes.
