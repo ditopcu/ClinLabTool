@@ -14,9 +14,9 @@ library(here)
 library(ggpubr)
 library(ggthemes)
 
-plot_colors <- c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69')
 
-options(shiny.maxRequestSize=10*1024^2) # 10 MB Upload Limit
+
+options(shiny.maxRequestSize=20 * 1024^2) # 10 MB Upload Limit
 
 
 # TODO Date selection for TAT
@@ -25,9 +25,10 @@ options(shiny.maxRequestSize=10*1024^2) # 10 MB Upload Limit
 source("src/analytics.R")
 
 
-my_format <- function(x, n = 1) format(round(x, n), nsmall = n)
+number_format <- function(x, n = 1) format(round(x, n), nsmall = n)
 
 
+# Constants for checking excel files 
 # spec_file_sheets <- c("Device Def", "Shift Def", "Test Group Def", "Test Group Test Def") 
 spec_file_sheets <- c("Device Def", "Test Group Def") 
 
@@ -40,7 +41,7 @@ lab_data_file_df_names <- c("index", "patient_id", "sample_id", "device", "sub_d
                             "result_time", "first_validation_time", "validation_time", "first_validation_staff", 
                             "validation_staff", "test_group", "test_id", "test_name")
 
-
+plot_colors <- c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69')
 
 # helper functions --------------------------------------------------------
 
@@ -127,9 +128,8 @@ ui <- dashboardPage(
     dashboardHeader(title = "Lab Analytics"),
     
 # dashboard side -----------------------------------------------------------
-    dashboardSidebar(      disable = FALSE,collapsed = FALSE,minified = FALSE,
-                     fluidRow(column(12, hr())),
-                     sidebarMenu(id = "tabs",
+    dashboardSidebar(sidebarMenu(id = "tabs",
+                      fluidRow(column(12, hr())),
                                  menuItem("Instructions", tabName = "mi_instructions"),
                                  menuItem("Data Viewer", tabName = "mi_table_viewer"),              
                                  menuItem("Data Summary", tabName = "mi_summary"),
@@ -139,7 +139,7 @@ ui <- dashboardPage(
                                           menuSubItem("Daily", tabName = "mi_sub_TAT_hourly")
                                           ),
                                  menuItem("Device Analytics", tabName = "mi_device")
-                     ),
+                     ,
                      fluidRow(column(12, hr())),
                      fluidRow(column(12, htmlOutput(outputId = "txt_is_specs_loaded"))),
                      fluidRow(column(12, htmlOutput(outputId = "txt_is_data_loaded"))),
@@ -148,13 +148,12 @@ ui <- dashboardPage(
                      fluidRow(column(12, fileInput("f_lab_data", "Upload Lab Data", accept = c(".xlsx"), width = "70%"))),
                      fluidRow(column(12, htmlOutput(outputId = "txt_file_err"))),
                      fluidRow(column(12, hr())),
-                     actionButton(inputId = "btn_demo",label =  "Load Demo Lab Data"),
+                     disable = FALSE,collapsed = FALSE, minified = FALSE)
+
+                     
+                     
                      # actionButton("btn_demo", span("Load Demo Lab Data", id = "UpdateAnimate", class = "loading dots")), 
-                     fluidRow(column(12, hr())),
-                     fluidRow(column(12,helpText("Downlad Template Files"))),
-                     fluidRow(column(1,helpText(" ")), column(10,downloadButton(outputId = "btn_dl_template_specs",label =  "  Definition Template") )),
-                     fluidRow(column(12,helpText(" "))),
-                     fluidRow(column(1,helpText(" ")), column(10,downloadButton(outputId = "btn_dl_template_data",label =  "  Data Template") ))
+
        
     ),
     
@@ -164,8 +163,22 @@ ui <- dashboardPage(
         tabItems(
           tabItem("mi_instructions", 
                   fluidRow(h1("Instructions")),
+                  fluidRow(column(12,helpText(paste("Instructons are avaiable as PDF File or "),
+                                              a("Click Here",     href="https://github.com/ditopcu/ClinLabTool/blob/main/Introduction%20Instructions.pdf"))
+                                              )),
+                  fluidRow(column(10,downloadButton(outputId = "btn_dl_instructions",label =  "Download Instructions PDF") )),
                   fluidRow(column(12,helpText("Lab data and specs can be uploaded by an Excel (xlsx) file."))),
-                  fluidRow(column(12,helpText("Template files are avalaible. Demo lab data is also avalaible.")))
+                  fluidRow(column(12,helpText("Shiny is limited to 20 MB file size. But this can be increased"))),
+                  fluidRow(column(12,helpText("Template files are avalaible. Downlad template files from:"))),
+                  fluidRow(column(12,helpText(""))),
+                  fluidRow(column(1,helpText(" ")), column(10,downloadButton(outputId = "btn_dl_template_specs",label =  "  Definition Template File") )),
+                  fluidRow(column(12,helpText(" "))),
+                  fluidRow(column(1,helpText(" ")), column(10,downloadButton(outputId = "btn_dl_template_data",label =  "  Data Template File") )),
+                  fluidRow(column(12, hr())),
+                  fluidRow(column(12,helpText("Demo lab data is also avalaible."))),
+                  actionButton(inputId = "btn_demo",label =  "Load Demo Lab Data & Spec"),
+                  fluidRow(column(12, hr())),
+                  helpText(   a("Click Here for the Github page",     href="https://github.com/ditopcu/ClinLabTool")),
                   ),  
           tabItem("mi_table_viewer", 
                 fluidRow(h1("Loaded Data")),
@@ -552,7 +565,6 @@ server <- function(input, output, session) {
                    start_date,
                    end_date,
                    device_names,
-                   test_groups,
                    sep="<br/>"))
         
 
@@ -562,7 +574,36 @@ server <- function(input, output, session) {
     
 
 # file operations--------------------------------------------------------------
+    
+    
+    
+    
+    output$btn_dl_instructions <- downloadHandler(    
+      filename = "ClinLabtool Instructions.pdf",
+      content =  function(file){
+        file.copy("Introduction Instructions.pdf", file)
+      }
+    )
+    
 
+    output$btn_dl_template_specs <- downloadHandler(    
+      filename = "ClinLabtool Lab Specs Excel Template File.xlsx",
+      content =  function(file){
+        file.copy("demo_data/1_TEMPLATE_definitions.xlsx", file)
+      },
+      contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    
+    output$btn_dl_template_data <- downloadHandler(    
+      filename = "ClinLabtool Lab Data Excel Template File.xlsx",
+      content =  function(file){
+        file.copy("demo_data/1_TEMPLATE Data.xlsx", file)
+      },
+      contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+      
+    
+    
     # Read lab specs
     observeEvent(input$f_lab_spec, {
 
@@ -896,7 +937,7 @@ server <- function(input, output, session) {
 
 
       sum_data |> 
-        mutate(used_device_capacity = paste0(my_format(used_device_capacity,1),"%" )) |> 
+        mutate(used_device_capacity = paste0(number_format(used_device_capacity,1),"%" )) |> 
         select(Weekday = 	w_day, Hour =	hour, 
                `Test Count` = test_count, `Device Capacity` = 	device_capacity,
                `Used Device Capacity` = used_device_capacity) # 	cum_test_count	cum_device_capacity)
@@ -969,7 +1010,7 @@ server <- function(input, output, session) {
 
     sum_data    |> 
         set_names("Test Group", "Test Name", "Mean (h)", "SD (h)", "Median (h)", "IQR (h)") |> 
-        mutate(across(where(is.numeric), my_format,2 ))
+        mutate(across(where(is.numeric), number_format,2 ))
       
       
     },options = list(dom = "tp", pageLength =  5  ))
@@ -997,7 +1038,7 @@ server <- function(input, output, session) {
         
       sum_data   |> 
           set_names("Test Group", "Mean (h)", "SD (h)", "Median (h)", "IQR (h)") |> 
-          mutate(across(where(is.numeric), my_format,2 ))     
+          mutate(across(where(is.numeric), number_format,2 ))     
 
     },options = list(dom = "tp", pageLength =  5  ))
     

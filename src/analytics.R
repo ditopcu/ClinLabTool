@@ -1,7 +1,7 @@
 format_hm <- function(sec) stringr::str_sub(format(sec), end = -4L)
 
 
-my_format <- function(x, n = 1) format(round(x, n), nsmall = n)
+number_format <- function(x, n = 1) format(round(x, n), nsmall = n)
 
 en_weekdays <- structure(1:7, .Label = c("Mon", "Tue", "Wed", "Thu", "Fri", 
                                "Sat", "Sun"), class = c("ordered", "factor"))
@@ -68,7 +68,7 @@ hourly_TAT_formatter <- function(df) {
   
   df |> 
     mutate(hour = format_hm(as.character(hms::hms(hour = hour)))) |> 
-    mutate(median_TAT = my_format(median_TAT, 2)) |> 
+    mutate(median_TAT = number_format(median_TAT, 2)) |> 
     spread(hour, median_TAT, fill = "-") 
     
 }
