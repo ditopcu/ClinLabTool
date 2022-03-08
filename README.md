@@ -1,5 +1,5 @@
 # ClinLabTool
-Clinical Laboratory Analytics with Shniy
+Clinical Laboratory Analytics with Shiny
 
 Introduction & Instructions
 •	For data import additional R function can be easily developed. CSV or other formats can be imported easily.
